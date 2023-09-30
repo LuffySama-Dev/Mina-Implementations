@@ -8,6 +8,7 @@ import {
   MerkleWitness,
   PublicKey,
   PrivateKey,
+  Signature,
 } from 'o1js';
 
 class MerkleWitness4 extends MerkleWitness(4) {}
@@ -55,5 +56,18 @@ export class Add extends SmartContract {
     const currIndex = this.nextIndex.get();
     this.nextIndex.assertEquals(currIndex);
     this.nextIndex.set(currIndex.add(Field(1)));
+  }
+
+  @method verifySickNote(
+    doctorWitness: MerkleWitness4,
+    doctorPubKey: PublicKey,
+    signature: Signature,
+    patientPubKey: PublicKey
+  ) {
+    // Verify that doctor is in the list of the doctors
+    this.root.assertEquals(doctorWitness.calculateRoot(doctorPubKey.x));
+
+    const ok = signature.verify(doctorPubKey, patientPubKey.toFields());
+    ok.assertTrue();
   }
 }
