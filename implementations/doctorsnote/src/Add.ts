@@ -1,4 +1,3 @@
-import { publicKey } from '@project-serum/anchor/dist/cjs/utils';
 import {
   Field,
   SmartContract,
@@ -19,7 +18,7 @@ export class Add extends SmartContract {
   // Ontario Association of the Medical Doctors (Canada)
   @state(PublicKey) cpsoPublicKey = State<PublicKey>();
 
-  // We use Field instead on an Int64 because there's a limit on the range of values allowable in O1js. It has to do with the circuit that's generated at compile time.
+  // We use Field instead of an Int64 because there's a limit on the range of values allowable in O1js. It has to do with the circuit that's generated at compile time.
   @state(Field) root = State<Field>();
 
   @method initState(cpsoPublicKey: PublicKey, initRoot: Field) {
