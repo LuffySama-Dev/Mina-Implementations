@@ -28,26 +28,22 @@ export class Account extends Struct({
     });
   }
 }
-// let initialCommitment: Field = Field(0);
 
 export class Leaderboard extends SmartContract {
   @state(Field) commitment = State<Field>();
+
+  // initState method
   @method initState(initialCommitment: Field) {
     super.init();
     this.commitment.set(initialCommitment);
   }
 
-  //   @method init() {
-  //     super.init();
-  //     this.commitment.set(initialCommitment);
-  //   }
-
-  @method
-  guessPreimage(guess: Field, account: Account, path: MyMerkleWitness) {
+  @method guessPreimage(guess: Field, account: Account, path: MyMerkleWitness) {
     // this is our hash! its the hash of the preimage "22", but keep it a secret!
     let target = Field(
       '17057234437185175411792943285768571642343179330449434169483610110583519635705'
     );
+
     // if our guess preimage hashes to our target, we won a point!
     Poseidon.hash([guess]).assertEquals(target);
 
@@ -67,84 +63,3 @@ export class Leaderboard extends SmartContract {
     this.commitment.set(newCommitment);
   }
 }
-
-//--------------------------------------------------------------------------------------------//
-
-// type Names = 'Bob' | 'Alice' | 'Charlie' | 'Olivia';
-
-// let Local = Mina.LocalBlockchain({ proofsEnabled: doProofs });
-// Mina.setActiveInstance(Local);
-// let initialBalance = 10_000_000_000;
-
-// let feePayerKey = Local.testAccounts[0].privateKey;
-// let feePayer = Local.testAccounts[0].publicKey;
-
-// // the zkapp account
-// let zkappKey = PrivateKey.random();
-// let zkappAddress = zkappKey.toPublicKey();
-
-// // this map serves as our off-chain in-memory storage
-// let Accounts: Map<string, Account> = new Map<Names, Account>(
-//   ['Bob', 'Alice', 'Charlie', 'Olivia'].map((name: string, index: number) => {
-//     return [
-//       name as Names,
-//       new Account({
-//         publicKey: Local.testAccounts[index].publicKey,
-//         points: UInt32.from(0),
-//       }),
-//     ];
-//   })
-// );
-
-// // we now need "wrap" the Merkle tree around our off-chain storage
-// // we initialize a new Merkle Tree with height 8
-// const Tree = new MerkleTree(8);
-
-// Tree.setLeaf(0n, Accounts.get('Bob')!.hash());
-// Tree.setLeaf(1n, Accounts.get('Alice')!.hash());
-// Tree.setLeaf(2n, Accounts.get('Charlie')!.hash());
-// Tree.setLeaf(3n, Accounts.get('Olivia')!.hash());
-
-// // now that we got our accounts set up, we need the commitment to deploy our contract!
-// initialCommitment = Tree.getRoot();
-
-// let leaderboardZkApp = new Leaderboard(zkappAddress);
-// console.log('Deploying leaderboard..');
-// if (doProofs) {
-//   await Leaderboard.compile();
-// }
-// let tx = await Mina.transaction(feePayer, () => {
-//   AccountUpdate.fundNewAccount(feePayer).send({
-//     to: zkappAddress,
-//     amount: initialBalance,
-//   });
-//   leaderboardZkApp.deploy();
-// });
-// await tx.prove();
-// await tx.sign([feePayerKey, zkappKey]).send();
-
-// console.log('Initial points: ' + Accounts.get('Bob')?.points);
-
-// console.log('Making guess..');
-// await makeGuess('Bob', 0n, 22);
-
-// console.log('Final points: ' + Accounts.get('Bob')?.points);
-
-// async function makeGuess(name: Names, index: bigint, guess: number) {
-//   let account = Accounts.get(name)!;
-//   let w = Tree.getWitness(index);
-//   let witness = new MyMerkleWitness(w);
-//   try {
-//     let tx = await Mina.transaction(feePayer, () => {
-//       leaderboardZkApp.guessPreimage(Field(guess), account, witness);
-//     });
-//     await tx.prove();
-//     await tx.sign([feePayerKey, zkappKey]).send();
-//   } catch (e: any) {
-//     console.log(e.message);
-//   }
-//   // if the transaction was successful, we can update our off-chain storage as well
-//   account.points = account.points.add(1);
-//   Tree.setLeaf(index, account.hash());
-//   leaderboardZkApp.commitment.get().assertEquals(Tree.getRoot());
-// }

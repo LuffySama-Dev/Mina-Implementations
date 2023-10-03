@@ -13,9 +13,10 @@ type Names = 'Bob' | 'Alice' | 'Charlie' | 'Olivia';
 const doProofs = true;
 
 class MyMerkleWitness extends MerkleWitness(8) {}
-let Local = Mina.LocalBlockchain({ proofsEnabled: doProofs });
+
+const Local = Mina.LocalBlockchain({ proofsEnabled: doProofs });
 Mina.setActiveInstance(Local);
-let initialBalance = 10_000_000_000;
+const initialBalance = 10_000_000_000;
 
 let feePayerKey = Local.testAccounts[0].privateKey;
 let feePayer = Local.testAccounts[0].publicKey;
@@ -46,14 +47,14 @@ Tree.setLeaf(2n, Accounts.get('Charlie')!.hash());
 Tree.setLeaf(3n, Accounts.get('Olivia')!.hash());
 
 let initialCommitment: Field = Tree.getRoot();
-// now that we got our accounts set up, we need the commitment to deploy our contract!
-// initialCommitment = Tree.getRoot();
 
 let leaderboardZkApp = new Leaderboard(zkappAddress);
 console.log('Deploying leaderboard..');
+
 if (doProofs) {
   await Leaderboard.compile();
 }
+
 let tx = await Mina.transaction(feePayer, () => {
   AccountUpdate.fundNewAccount(feePayer).send({
     to: zkappAddress,
@@ -66,16 +67,18 @@ await tx.prove();
 await tx.sign([feePayerKey, zkappKey]).send();
 
 console.log('Initial points: ' + Accounts.get('Bob')?.points);
-
 console.log('Making guess..');
 await makeGuess('Bob', 0n, 22);
-
 console.log('Final points: ' + Accounts.get('Bob')?.points);
 
 async function makeGuess(name: Names, index: bigint, guess: number) {
   let account = Accounts.get(name)!;
+
+  // Create the witness from for the index from the merkle tree.
   let w = Tree.getWitness(index);
   let witness = new MyMerkleWitness(w);
+
+  // Create a Transaction with guess, account and witness. Send the transaction.
   try {
     let tx = await Mina.transaction(feePayer, () => {
       leaderboardZkApp.guessPreimage(Field(guess), account, witness);
@@ -85,6 +88,7 @@ async function makeGuess(name: Names, index: bigint, guess: number) {
   } catch (e: any) {
     console.log(e.message);
   }
+
   // if the transaction was successful, we can update our off-chain storage as well
   account.points = account.points.add(1);
   Tree.setLeaf(index, account.hash());
