@@ -1,3 +1,4 @@
+import { publicKey } from '@project-serum/anchor/dist/cjs/utils';
 import {
   Field,
   SmartContract,
@@ -11,6 +12,10 @@ import {
   UInt32,
   Poseidon,
   Bool,
+  provable,
+  Provable,
+  verify,
+  Signature,
 } from 'o1js';
 
 class MerkleWitness8 extends MerkleWitness(8) {}
@@ -89,9 +94,12 @@ export class Add extends SmartContract {
     this.commitment.set(newCommitment);
   }
 
-  @method verifyIfPass(account: Account, path: MerkleWitness8) {
-    // const isPass: Bool = new Bool(true);
-    // const isFail: Bool = new Bool(false);
+  @method verifyIfPass(
+    sscPublicKey: PublicKey,
+    account: Account,
+    path: MerkleWitness8,
+    signature: Signature
+  ): [Bool, Bool] {
     const y = Field(80);
 
     // Now let's fetch the on-chain commitment
@@ -101,27 +109,11 @@ export class Add extends SmartContract {
     // Let's check if the account is present in the merkle tree
     path.calculateRoot(account.hash()).assertEquals(commitment);
 
-    // console.log(account.marks);
+    const ok = signature.verify(sscPublicKey, account.stdPublicKey.toFields());
+    ok.assertTrue();
 
-    account.marks.greaterThanOrEqual(UInt32.from(y));
+    let passORfail = account.marks.greaterThanOrEqual(UInt32.from(y));
 
-    // if (z) {
-    //   this.isPass.set(true);
-    // } else {
-    //   this.isPass.set(false);
-    // }
-
-    // we check that the account has at least 10 score points in order to claim the reward
-    // account.marks.assertGreaterThanOrEqual(UInt32.from(y));
-
-    /*
-    if (account.marks.greaterThanOrEqual(UInt32.from(y))) {
-      console.log('is True');
-      return isPass;
-    } else {
-      console.log('is False');
-      return isFail;
-    }
-    */
+    return [passORfail, ok];
   }
 }

@@ -1,3 +1,4 @@
+import { cleanStatePrecondition } from 'o1js/dist/node/lib/state.js';
 import { Account, Add } from './teachersremark.js';
 import {
   AccountUpdate,
@@ -6,6 +7,7 @@ import {
   MerkleWitness,
   Mina,
   PrivateKey,
+  Signature,
   UInt32,
 } from 'o1js';
 
@@ -88,7 +90,8 @@ console.log(
 
 // Let's verify if you have pass
 // await verifyIfPass('Radhe', 0n);
-await verifyIfPass('Bob', 2n);
+await verifyIfPass('Krishn', 1n);
+// await verifyIfPass('Bob', 2n);
 
 async function verifyIfPass(name: Names, index: bigint) {
   let account = Accounts.get(name)!;
@@ -97,23 +100,32 @@ async function verifyIfPass(name: Names, index: bigint) {
   let w = Tree.getWitness(index);
   let witness = new MyMerkleWitness(w);
 
+  let sig = Signature.create(feePayerKey, account.stdPublicKey.toFields());
+
   try {
-    let tx = await Mina.transaction(feePayer, () => {
-      teachersremark.verifyIfPass(account, witness);
-    });
-    await tx.prove();
-    // console.log(tx.toPretty());
-    await tx.sign([feePayerKey, zkappKey]).send();
+    const [passORfail, ok] = teachersremark.verifyIfPass(
+      feePayer,
+      account,
+      witness,
+      sig
+    );
+
+    if (ok.toBoolean()) {
+      console.log(
+        `Hmm... Signature is legit, now let's see if he has passed or not !!`
+      );
+      if (passORfail.toBoolean()) {
+        console.log(`Dude, ${name} has proof he has passed !!!`);
+      } else {
+        console.log(`Ohhh!!! Better luck next time ${name} :)`);
+      }
+    } else {
+      console.log(
+        `Hmm... Signature is not legit!! You are a liar, imposter person ${name}!!`
+      );
+    }
   } catch (e: any) {
     console.log('Here Here!' + e.message);
-  }
-
-  console.log(teachersremark.isPass.get());
-
-  if (teachersremark.isPass.get()) {
-    console.log(`Dude, he has proof he has passed !!!`);
-  } else {
-    console.log(`Buddy, He is lying!!!`);
   }
 }
 
