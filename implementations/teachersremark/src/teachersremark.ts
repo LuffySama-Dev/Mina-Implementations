@@ -1,4 +1,3 @@
-import { publicKey } from '@project-serum/anchor/dist/cjs/utils';
 import {
   Field,
   SmartContract,
@@ -12,9 +11,6 @@ import {
   UInt32,
   Poseidon,
   Bool,
-  provable,
-  Provable,
-  verify,
   Signature,
 } from 'o1js';
 
@@ -24,10 +20,12 @@ export class Account extends Struct({
   stdPublicKey: PublicKey,
   marks: UInt32,
 }) {
+  // Hash method to has the contents of the account while adding it to the merkle tree
   hash(): Field {
     return Poseidon.hash(Account.toFields(this));
   }
 
+  // To return a new account with the smae public key but updated marks.
   addMarks(marks: UInt32) {
     return new Account({
       stdPublicKey: this.stdPublicKey,
@@ -37,13 +35,8 @@ export class Account extends Struct({
 }
 
 export class Add extends SmartContract {
-  // We need this for getting the value
-  @state(Bool) isPass = State<boolean>();
-  @state(Bool) isFail = State<boolean>();
-
   // Maharashtra Board of Examination: SSC (State Board Of Secondary School Certificate). (India)
-  @state(PublicKey)
-  sscPublicKey = State<PublicKey>();
+  @state(PublicKey) sscPublicKey = State<PublicKey>();
 
   // This is the root of our merkle tree. This will be set during deployment.
   // As Students number are fixed so we don't need to add them again and again, we will add them at once during deployment.

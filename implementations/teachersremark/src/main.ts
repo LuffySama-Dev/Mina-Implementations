@@ -1,4 +1,3 @@
-import { cleanStatePrecondition } from 'o1js/dist/node/lib/state.js';
 import { Account, Add } from './teachersremark.js';
 import {
   AccountUpdate,
@@ -72,7 +71,6 @@ await tx.sign([feePayerKey, zkappKey]).send();
 
 console.log('Contract Deployed....');
 console.log('Initial marks: ' + Accounts.get('Radhe')?.marks);
-// Working till here
 
 console.log(
   `Now let the SSC board add some Marks... (sshhhhh!! We are gonna fail some Students!!)`
